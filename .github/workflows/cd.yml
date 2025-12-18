@@ -35,7 +35,7 @@ jobs:
         run: kubectl apply -R -f k8s/
       - name: Restart deployments
         run: |
-          kubectl rollout restart deployment backend
+          kubectl rollout restart deployment django-backend
           kubectl rollout restart deployment frontend
       - name: Verify
         run: kubectl get pods,svc
