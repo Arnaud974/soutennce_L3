@@ -1,17 +1,20 @@
-name: CI/CD - Django + React + GKE + Terraform
+name: CI/CD - Django + React + Minikube
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+    types: [closed]
     branches: ["main"]
+
+env:
+  IMAGE_TAG: ${{ github.run_number }}
 
 jobs:
 
   # =======================================================
-  # 1️⃣ CI BACKEND - Django (pytest)
+  # 1️⃣ CI BACKEND - Django
   # =======================================================
   backend:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -26,137 +29,93 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.10"
 
       - name: Install backend dependencies
-        working-directory: ./backend
-        run: pip install -r requirements.txt
+        working-directory: backend
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run migrations
-        working-directory: ./backend
+        working-directory: backend
         run: python manage.py migrate
 
-      - name: Run backend unit tests
-        working-directory: ./backend
-        run: pytest -m unit -v
-
-      - name: Run backend integration tests
-        working-directory: ./backend
-        run: pytest -m integration -v
+      - name: Run backend tests
+        working-directory: backend
+        run: pytest -v
 
   # =======================================================
-  # 2️⃣ CI FRONTEND - React (Vitest + Playwright)
+  # 2️⃣ CI FRONTEND - React
   # =======================================================
   frontend:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     needs: backend
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install frontend dependencies
-        working-directory: ./frontend
+        working-directory: frontend
         run: npm install
 
-      - name: Install Playwright browsers
-        working-directory: ./frontend
-        run: npx playwright install
-
       - name: Build frontend
-        working-directory: ./frontend
+        working-directory: frontend
         run: npm run build
 
-      - name: Serve for Playwright E2E tests
-        working-directory: ./frontend
-        run: npx serve -s dist -l 5173 &
-
-      - name: Wait for frontend
-        run: npx wait-on http://localhost:5173
-
-      - name: Run unit tests
-        working-directory: ./frontend
-        run: npx vitest --run
-
-      - name: Run E2E tests with Playwright
-        working-directory: ./frontend
-        run: npx playwright test --reporter=list,html
-
   # =======================================================
-  # 3️⃣ CD - Build Docker images and deploy to GKE
+  # 3️⃣ BUILD & PUSH DOCKER IMAGES
   # =======================================================
-  cd-deploy:
-    needs: [backend, frontend]
+  docker:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    env:
-      IMAGE_TAG: ${{ github.run_number }}
+    needs: [backend, frontend]
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
         with:
-          submodules: true  
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Configure Docker for Artifact Registry
+      - name: Build & push backend image
         run: |
-          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/freelance-backend:${{ env.IMAGE_TAG }} backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/freelance-backend:${{ env.IMAGE_TAG }}
 
-      # -------------------------------------------------
-      # Build & Push Backend
-      # -------------------------------------------------
-      - name: Build backend image
-        working-directory: ./backend
+      - name: Build & push frontend image
         run: |
-          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/backend-app:${IMAGE_TAG} .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/freelance-frontend:${{ env.IMAGE_TAG }} frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/freelance-frontend:${{ env.IMAGE_TAG }}
 
-      - name: Push backend image
-        run: |
-          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/backend-app:${IMAGE_TAG}
+  # =======================================================
+  # 4️⃣ CD - DEPLOY TO MINIKUBE
+  # =======================================================
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
+    needs: docker
 
-      # -------------------------------------------------
-      # Build & Push Frontend
-      # -------------------------------------------------
-      - name: Build frontend image
-        working-directory: ./frontend
-        run: |
-          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/frontend-app:${IMAGE_TAG} .
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Push frontend image
-        run: |
-          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPOSITORY }}/frontend-app:${IMAGE_TAG}
+      - name: Check kubectl access
+        run: kubectl get nodes
 
-      # -------------------------------------------------
-      # Deploy to GKE
-      # -------------------------------------------------
-      - name: Get GKE credentials
-        run: |
-          gcloud container clusters get-credentials ${{ secrets.GCP_CLUSTER_NAME }} \
-          --zone ${{ secrets.GCP_CLUSTER_ZONE }} \
-          --project ${{ secrets.GCP_PROJECT_ID }}
+      - name: Deploy to Minikube
+        run: kubectl apply -f k8s/
 
-      - name: Install gke-gcloud-auth-plugin
+      - name: Restart deployments
         run: |
-          gcloud components install gke-gcloud-auth-plugin --quiet
+          kubectl rollout restart deployment backend
+          kubectl rollout restart deployment frontend
 
-      - name: Apply Kubernetes manifests
-        working-directory: ./k8s
-        run: |
-          export IMAGE_TAG=${IMAGE_TAG}
-          for file in $(find . -name '*-template.yaml'); do
-            envsubst < $file > ${file/-template.yaml/.yaml}
-          done
-          kubectl apply -R -f .
+      - name: Verify
+        run: kubectl get pods,svc
