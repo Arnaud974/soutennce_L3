@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+         
+            # 1️⃣ Dashboards JSON
+            # - name: grafana-dashboards
+            #   mountPath: /var/lib/grafana/dashboards
+
+            # 2️⃣ Fichier de provisioning YAML
+            # - name: grafana-provisioning
+            #   mountPath: /etc/grafana/provisioning/dashboards
+              
+            # 3️⃣ Stockage persistant
+          securityContext:
+            runAsUser: 472
+            runAsGroup: 472
+           
+           
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+
+        # ConfigMap contenant les dashboards JSON
+        # - name: grafana-dashboards
+        #   configMap:
+        #     name: grafana-dashboards
+
+        # ConfigMap contenant le fichier dashboards.yaml (provisioning)
+        # - name: grafana-provisioning
+        #   configMap:
+        #     name: grafana-provisioning

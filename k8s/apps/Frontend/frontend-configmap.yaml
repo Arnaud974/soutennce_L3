@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config-json
+  namespace: freelance
+data:
+  config.json: |
+    {
+      "API_URL": "http://freelance.stage:80",          
+      "WEBSOCKET_API_URL": "ws://freelance.stage:80",
+      "MEDIA_URL": "https://storage.googleapis.com/freelance-media/media"
+    }
