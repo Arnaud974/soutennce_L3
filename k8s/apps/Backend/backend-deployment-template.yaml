@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: django-backend
-          image: us-central1-docker.pkg.dev/soutenance-479118/freelance-repo/backend-app:${IMAGE_TAG}
+          image: arno974/freelance-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
