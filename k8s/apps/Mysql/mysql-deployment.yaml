@@ -42,5 +42,3 @@ spec:
         - name: mysql-data
           persistentVolumeClaim:
             claimName: mysql-pvc
-      nodeSelector:
-        topology.gke.io/zone: us-central1-a
