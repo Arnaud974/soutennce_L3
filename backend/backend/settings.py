@@ -180,43 +180,6 @@ STATIC_ROOT = BASE_DIR / "static"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # -------------------------------
-# GOOGLE CLOUD STORAGE
-# -------------------------------
-if not DEBUG:
-
-    GS_BUCKET_NAME = config("GS_BUCKET_NAME")
-    GS_PROJECT_ID = config("GS_PROJECT_ID")
-
-    # Chemin dans le conteneur (monté depuis un secret Kubernetes)
-    GCS_KEY_PATH = "/secrets/key.json"
-
-    # On charge la clé de service GCP
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(GCS_KEY_PATH)
-
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-            "OPTIONS": {
-                "bucket_name": GS_BUCKET_NAME,
-                "project_id": GS_PROJECT_ID,
-                "credentials": GS_CREDENTIALS,
-                "location": "media",  # dossier dans le bucket
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-            "OPTIONS": {
-                "bucket_name": GS_BUCKET_NAME,
-                "project_id": GS_PROJECT_ID,
-                "credentials": GS_CREDENTIALS,
-                "location": "static",
-            },
-        },
-    }
-
-    MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
-    STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
-# -------------------------------
 # Channels / Redis
 # -------------------------------
 REDIS_HOST = config("REDIS_HOST", default="127.0.0.1")
