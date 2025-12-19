@@ -31,15 +31,4 @@ spec:
                 name: backend-config
             - secretRef:
                 name: backend-secret
-          env:
-            - name: GOOGLE_APPLICATION_CREDENTIALS
-              value: /secrets/key.json
-          volumeMounts:
-            - name: gcs-credentials
-              mountPath: /secrets
-              readOnly: true
-      volumes:
-        - name: gcs-credentials
-          secret:
-            secretName: gcs-credentials
          
