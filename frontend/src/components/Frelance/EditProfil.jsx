@@ -135,10 +135,9 @@ export default function EditProfileFreelance({ freelance, onSave, onCancel }) {
                 <img
                   src={
                     profile.photoPreview // 1. Aperçu local (si un nouveau fichier est sélectionné)
-                      ? profile.photoPreview
+                      ? "/images/profil.png"
                       : typeof profile.photo === 'string' 
-                        ? `${MEDIA_URL}/${profile.photo}` // 2. URL du backend (si c'est une chaîne et un chemin relatif)
-                        : "/images/profil.png" // 3. Photo par défaut
+                        ? "/images/profil.png" : "/images/faly.png" // 3. Photo par défaut
                   }
                   alt="Aperçu Profil"
                   className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-indigo-300 dark:border-indigo-500 shadow-lg group-hover:scale-105 transition-transform duration-200"

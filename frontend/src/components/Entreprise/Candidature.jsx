@@ -163,7 +163,7 @@ export default function CandidatureList({
               <div className="flex items-center mt-1 mb-4">
                 {c.freelance_photo ? (
                   <img
-                    src={`${MEDIA_URL}/${c.freelance_photo}`}
+                    src="/images/profil.png"
                     alt={c.freelance_nom || "Freelance inconnu"}
                     className="w-14 h-14 rounded-full mr-3 border-2 border-[var(--accent-light)] object-cover"
                   />

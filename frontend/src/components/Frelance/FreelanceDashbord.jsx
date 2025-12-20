@@ -479,7 +479,7 @@ export default function FreelanceDashboard() {
                     {/* --- Profil --- */}
                     <div className="flex items-center w-52 gap-4">
                       <img
-                        src={`${MEDIA_URL}/${freelance.photo}` || "/images/profil.png"}
+                        src="/images/profil.png"
                         alt="Profil"
                         className="w-12 h-12 rounded-full border-2 border-violet-500 shadow-md object-cover hover:scale-105 transition-transform duration-300"
                       />
