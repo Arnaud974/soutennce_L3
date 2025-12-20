@@ -50,6 +50,9 @@ spec:
             - name: frontend-config
               mountPath: /usr/share/nginx/html/config.json
               subPath: config.json
+            - name: media-volume
+              mountPath: /app/media
+            
       volumes:
         - name: nginx-config
           configMap:
@@ -57,4 +60,8 @@ spec:
         - name: frontend-config
           configMap:
             name: frontend-config-json
+        - name: media-volume
+          persistentVolumeClaim:
+            claimName: backend-media-pvc
+        
        
