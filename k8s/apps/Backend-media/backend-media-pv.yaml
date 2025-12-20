@@ -8,6 +8,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
+  storageClassName: Standard
+  volumeMode: Filesystem
   hostPath:
     path: /data/backend-media
     type: DirectoryOrCreate
