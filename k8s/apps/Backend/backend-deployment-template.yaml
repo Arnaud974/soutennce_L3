@@ -33,7 +33,7 @@ spec:
                 name: backend-secret
           volumeMounts:
             - name: media-volume
-              mountPath: /app/media   # Chemin Django MEDIA_ROOT
+              mountPath: /app/media   
       volumes:
         - name: media-volume
           persistentVolumeClaim:

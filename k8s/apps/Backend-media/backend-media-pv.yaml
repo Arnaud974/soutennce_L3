@@ -7,6 +7,7 @@ spec:
     storage: 1Gi
   accessModes:
     - ReadWriteOnce
-  hostPath:        
-    path: /mnt/data/media
   persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/backend-media
+    type: DirectoryOrCreate
