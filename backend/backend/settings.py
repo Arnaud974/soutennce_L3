@@ -172,12 +172,15 @@ TIME_ZONE = "Indian/Antananarivo"
 USE_I18N = True
 USE_TZ = True
 
-# STATIC & MEDIA (LOCAL MODE)
+# -------------------------------
+# STATIC & MEDIA (PVC dans K8s)
 # -------------------------------
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-STATIC_ROOT = BASE_DIR / "static"
-MEDIA_ROOT = BASE_DIR / "media"
+
+# Sur Kubernetes : monte ton PVC sur /app/media
+MEDIA_ROOT = "/app/media"
+STATIC_ROOT = "/app/static"
 
 # -------------------------------
 # Channels / Redis
