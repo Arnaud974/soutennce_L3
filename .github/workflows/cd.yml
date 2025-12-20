@@ -1,8 +1,9 @@
 name: CD - Docker + Minikube
 
 on:
-  push:
+  pull_request:
     branches: ["main"]
+    types: [closed]
 
 env:
   IMAGE_TAG: ${{ github.run_number }}
