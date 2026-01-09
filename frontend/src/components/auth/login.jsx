@@ -156,7 +156,7 @@ export default function Login() {
             className="text-4xl font-bold mb-6 text-center"
             style={{ color: "var(--text-primary)" }}
           >
-            soutenance ENI
+            soutenance arno
           </h1>
 
           {message && (
@@ -186,7 +186,6 @@ export default function Login() {
               <div className="relative">
                 <FaEnvelope className="absolute left-3 top-3 text-gray-400" />
                 <input
-                  type="email"
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
