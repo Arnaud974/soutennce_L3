@@ -156,7 +156,7 @@ export default function Login() {
             className="text-4xl font-bold mb-6 text-center"
             style={{ color: "var(--text-primary)" }}
           >
-            page de connexion
+            connexion 
           </h1>
 
           {message && (
